@@ -1,5 +1,7 @@
 import urllib.parse
 import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 from lxml import html
 import unicodecsv as csv
 from multiprocessing import Pool as ThreadPool
@@ -19,18 +21,18 @@ def parse_listing(url):
     scraped_results = []
     try:
 
-        # times = [0,0.2,0.4,0.6,0.8,1]
-        times = [5,6,7,8,9,10]
+        times = [0,0.2,0.4,0.6,0.8,1]
+        # times = [5,6,7,8,9,10]
         time.sleep(random.choice(times))
         print('parsing page: ' + url)
-        # response = get_response(url)
+        response = get_response(url)
 
-        proxy_list = get_share_proxies()
-        random_proxy = get_random_proxy(proxy_list)
-        proxies = {"http": "http://" + random_proxy, "https": "http://" + random_proxy}
-        s = requests.session()
-        s.cookies.clear()
-        response = s.get = requests.get(url, verify=False, headers = headers, timeout=10, proxies=proxies)
+        # proxy_list = get_share_proxies()
+        # random_proxy = get_random_proxy(proxy_list)
+        # proxies = {"http": "http://" + random_proxy, "https": "http://" + random_proxy}
+        # s = requests.session()
+        # s.cookies.clear()
+        # response = s.get = requests.get(url, verify=False, headers = headers, timeout=10, proxies=proxies)
         print("parsed page: " + url)
         if response.status_code == 200:
             parser = html.fromstring(response.text)
@@ -105,6 +107,8 @@ def get_response(url):
                     print('worked %s' % proxy)
                     running = False
                     break
+                except requests.exceptions.Timeout:
+                    continue
                 except Exception as e:
                     print ('error %s' % proxy)
                     print ('error %s' % e)
@@ -121,7 +125,7 @@ def pool_scraped_data(function_name, parameter_list):
     return scraped_data
 
 def pool(function_name, parameter_list):
-    pool = ThreadPool(4)
+    pool = ThreadPool(10)
     pool.map(function_name, parameter_list)
     pool.terminate()
     pool.join()
